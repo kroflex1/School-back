@@ -33,6 +33,7 @@ dependencies {
     implementation 'org.liquibase:liquibase-core:4.25.0'
     implementation 'org.springframework.security:spring-security-crypto:6.5.5'
     implementation 'org.springframework.security:spring-security-core:6.5.5'
+    implementation 'org.springframework.hateoas:spring-hateoas'
     runtimeOnly 'org.postgresql:postgresql:42.6.0'
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
