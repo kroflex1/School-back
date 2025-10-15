@@ -17,7 +17,8 @@ public class PhotoOfPresent {
     @Lob
     private byte[] photo;
 
-    @ManyToOne
+    // МНОГО фото -> ОДИН подарок
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "present_id", nullable = false)
-    private Presents present;
+    private Present present;
 }
