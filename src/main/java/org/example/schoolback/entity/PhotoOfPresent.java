@@ -8,13 +8,14 @@ import lombok.*;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class PhotoOfPresent {
+public class    PhotoOfPresent {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Lob
+    @Column(name = "photo_data", nullable = false, columnDefinition = "LONGBLOB")
     private byte[] photo;
 
     // МНОГО фото -> ОДИН подарок

@@ -7,17 +7,10 @@ import java.util.List;
 
 @Data
 @NoArgsConstructor
-public class PresentResponse {
+public class MobilePresentResponse {
     private Long id;
     private String name;
     private Long priceCoins;
     private Integer stock;
     private List<Long> photoIds;
-
-    public PresentResponse(Long id, String name, Long priceCoins, Integer stock, String description) {
-        this.id = id;
-        this.name = name;
-        this.priceCoins = priceCoins;
-        this.stock = stock;
-    }
 }
