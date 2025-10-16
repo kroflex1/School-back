@@ -7,5 +7,4 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class PhotoResponse {
     private Long id;
-    private Integer order;
 }

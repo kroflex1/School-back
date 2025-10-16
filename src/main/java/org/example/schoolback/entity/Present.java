@@ -2,9 +2,7 @@ package org.example.schoolback.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.UpdateTimestamp;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -32,9 +30,6 @@ public class Present {
     @OneToMany(mappedBy = "present", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<PhotoOfPresent> photos = new ArrayList<>();
 
-    @UpdateTimestamp
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
 
     public void removePhoto(PhotoOfPresent photo) {
         this.photos.remove(photo);
