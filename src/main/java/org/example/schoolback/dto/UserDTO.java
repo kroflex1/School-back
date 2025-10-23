@@ -1,4 +1,4 @@
-package org.example.schoolback.resource.assembler;
+package org.example.schoolback.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
@@ -6,7 +6,6 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.example.schoolback.entity.Role;
-import org.springframework.hateoas.RepresentationModel;
 
 import java.time.LocalDate;
 
@@ -14,13 +13,16 @@ import java.time.LocalDate;
 @EqualsAndHashCode(callSuper = false)
 @NoArgsConstructor
 @AllArgsConstructor
-public class UserResource extends RepresentationModel<UserResource> {
+public class UserDTO {
 
-    @JsonProperty("id")
+    @JsonProperty(value = "id", access = JsonProperty.Access.READ_ONLY)
     private Long id;
 
     @JsonProperty("login")
     private String login;
+
+    @JsonProperty("password")
+    private String password;
 
     @JsonProperty("role")
     private Role role;
