@@ -12,5 +12,7 @@ public interface GroupRepository extends JpaRepository<Group, Long> {
 
     List<Group> findByTeacher(User teacher);
 
-    List<Group> findByGroupNameContainingIgnoreCase(String name);
+    List<Group> findByNameContainingIgnoreCase(String name);
+
+    List<Group> findByTeacherAndNameContainingIgnoreCase(User teacher, String name);
 }

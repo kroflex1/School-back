@@ -1,5 +1,9 @@
 package org.example.schoolback.util.assembler;
 
+import java.util.Collection;
+import java.util.List;
+import java.util.stream.Collectors;
+
 public abstract class ConverterModelAssembler <Entity, Model> {
 
     /**
@@ -19,4 +23,11 @@ public abstract class ConverterModelAssembler <Entity, Model> {
      * Используется для обновления Entity
      */
     public abstract void updateEntity(Entity existingEntity, Model resource);
+
+
+    public List<Model> toModels(Collection<Entity> entities){
+        return entities.stream()
+                .map(this::toModel)
+                .collect(Collectors.toList());
+    }
 }
