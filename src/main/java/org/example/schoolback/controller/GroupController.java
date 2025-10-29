@@ -2,6 +2,7 @@ package org.example.schoolback.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import org.example.schoolback.dto.GroupDTO;
+import org.example.schoolback.dto.request.CreateGroupRequest;
 import org.example.schoolback.entity.Group;
 import org.example.schoolback.service.GroupService;
 import org.example.schoolback.util.assembler.impl.GroupAssembler;
@@ -11,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Optional;
 
 @RestController
@@ -36,8 +38,8 @@ public class GroupController {
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Создать новую группу")
-    public ResponseEntity<GroupDTO> createGroup(@RequestBody GroupDTO groupDTO) {
-        final Group createdGroup = groupService.createGroup(groupDTO, resource -> groupAssembler.createEntity(groupDTO));
+    public ResponseEntity<GroupDTO> createGroup(@RequestBody CreateGroupRequest createGroupRequest) {
+        final Group createdGroup = groupService.createGroup(createGroupRequest, resource -> groupAssembler.createEntity(resource));
         final GroupDTO resource = groupAssembler.toModel(createdGroup);
         return ResponseEntity.status(HttpStatus.CREATED).body(resource);
     }
@@ -48,7 +50,7 @@ public class GroupController {
     public ResponseEntity<GroupDTO> updateGroup(@PathVariable Long id, @RequestBody GroupDTO groupDTO) {
         final Group updatedGroup = groupService.updateGroup(id, groupDTO, (groupEntity, resource) -> groupAssembler.updateEntity(groupEntity, resource));
         final GroupDTO resource = groupAssembler.toModel(updatedGroup);
-        return ResponseEntity.status(HttpStatus.CREATED).body(resource);
+        return ResponseEntity.ok(resource);
     }
 
     @DeleteMapping("/{id}")
@@ -57,5 +59,40 @@ public class GroupController {
     public ResponseEntity<Void> deleteGroup(@PathVariable Long id) {
         groupService.deleteGroup(id);
         return ResponseEntity.ok().build();
+    }
+
+    @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'STUDENT')")
+    @Operation(summary = "Получить группы, в которых состоит пользователь",
+            description = """
+        Получить группы, в которых состоит пользователь.
+        
+        **Влияние роли:**
+        - ADMIN: получает информацию о всех группах;
+        - TEACHER: получает информацию о группах, в которых он является преподавателем;
+        - STUDENT: получает информацию о группах, в которых он состоит;
+        """)
+    public ResponseEntity<List<GroupDTO>> getAvailableGroups() {
+        final List<Group> availableGroups = groupService.getAvailableGroupsForCurrentUser();
+        final List<GroupDTO> resources = groupAssembler.toModels(availableGroups);
+        return ResponseEntity.ok(resources);
+    }
+
+    @PostMapping("{groupId}/students/{studentId}")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Добавить ученика в группу")
+    public ResponseEntity<GroupDTO> addStudentToGroup(@PathVariable Long groupId, @RequestParam Long studentId) {
+        final Group group = groupService.addStudentToGroup(groupId, studentId);
+        final GroupDTO resource = groupAssembler.toModel(group);
+        return ResponseEntity.ok(resource);
+    }
+
+    @DeleteMapping("{groupId}/students/{studentId}")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Удалить ученика из группы")
+    public ResponseEntity<GroupDTO> removeStudentFromGroup(@PathVariable Long groupId, @RequestParam Long studentId) {
+        final Group group = groupService.removeStudentFromGroup(groupId, studentId);
+        final GroupDTO resource = groupAssembler.toModel(group);
+        return ResponseEntity.ok(resource);
     }
 }
