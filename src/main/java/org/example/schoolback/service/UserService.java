@@ -2,9 +2,9 @@ package org.example.schoolback.service;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.validator.routines.EmailValidator;
+import org.example.schoolback.dto.UserDTO;
 import org.example.schoolback.entity.User;
 import org.example.schoolback.repository.UserRepository;
-import org.example.schoolback.dto.UserDTO;
 import org.example.schoolback.util.Updater;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.convert.converter.Converter;
@@ -23,7 +23,7 @@ public class UserService {
 
     private static final EmailValidator EMAIL_VALIDATOR = EmailValidator.getInstance();
 
-
+    @Transactional(readOnly = true)
     public Optional<User> getCurrentUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
@@ -33,14 +33,16 @@ public class UserService {
         return Optional.empty();
     }
 
-    public User getUserById(Long id) {
-        return userRepository.findById(id).orElseThrow(() -> new RuntimeException("User not found with id: " + id));
+    @Transactional(readOnly = true)
+    public Optional<User> getUserById(Long id) {
+        return userRepository.findById(id);
     }
 
 
     public User createUser(UserDTO userDTO, Converter<UserDTO, User> converter) {
         final User newUser = converter.convert(userDTO);
         validateCreate(newUser);
+        newUser.setCoins(0L);
 
         return userRepository.save(newUser);
     }
@@ -63,7 +65,6 @@ public class UserService {
         if (user.isEmpty()) {
             throw new IllegalArgumentException(String.format("User not found with id: %d", userId));
         }
-        //TODO: нужно реализовать также удаление связанных сущностей
         userRepository.delete(user.get());
     }
 
@@ -86,7 +87,6 @@ public class UserService {
     }
 
 
-
     private void validateCommonFields(User user) {
         if (StringUtils.isBlank(user.getLogin())) {
             throw new IllegalArgumentException("Login cannot be empty");
@@ -101,7 +101,7 @@ public class UserService {
             throw new IllegalArgumentException("Password must be at least 4 characters long");
         }
 
-        if (StringUtils.isBlank(user.getEmail()) || !EMAIL_VALIDATOR.isValid(user.getEmail())) {
+        if (!StringUtils.isBlank(user.getEmail()) && !EMAIL_VALIDATOR.isValid(user.getEmail())) {
             throw new IllegalArgumentException("Invalid email format");
         }
 

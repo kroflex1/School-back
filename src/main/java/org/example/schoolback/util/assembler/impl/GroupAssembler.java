@@ -25,7 +25,7 @@ public class GroupAssembler  extends ConverterModelAssembler<Group, GroupDTO> {
         resource.setGroupName(group.getName());
         resource.setTeacherId(group.getTeacherId());
         resource.setTeacher(userResourceAssembler.toModel(group.getTeacher()));
-        resource.setParticipants(userResourceAssembler.toModels(group.getParticipants()));
+        resource.setStudents(userResourceAssembler.toModels(group.getParticipants()));
         return resource;
     }
 

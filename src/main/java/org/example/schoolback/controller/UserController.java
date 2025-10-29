@@ -1,10 +1,10 @@
 package org.example.schoolback.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
-import org.example.schoolback.entity.User;
 import org.example.schoolback.dto.UserDTO;
-import org.example.schoolback.util.assembler.impl.UserResourceAssembler;
+import org.example.schoolback.entity.User;
 import org.example.schoolback.service.UserService;
+import org.example.schoolback.util.assembler.impl.UserResourceAssembler;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -26,8 +26,11 @@ public class UserController {
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Получить информацию о пользователе по его id")
     public ResponseEntity<UserDTO> getUserById(@PathVariable Long id) {
-        User user = userService.getUserById(id);
-        UserDTO resource = userResourceAssembler.toModel(user);
+        Optional<User> user = userService.getUserById(id);
+        if (user.isEmpty()) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+        UserDTO resource = userResourceAssembler.toModel(user.get());
         return ResponseEntity.ok(resource);
     }
 
@@ -44,8 +47,8 @@ public class UserController {
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Обновить данные пользователя")
     public ResponseEntity<UserDTO> updateUser(@PathVariable Long id, @RequestBody UserDTO userDTO) {
-        final User createdUser = userService.updateUser(id, userDTO, (userEntity, resource) -> userResourceAssembler.updateEntity(userEntity, resource));
-        final UserDTO resource = userResourceAssembler.toModel(createdUser);
+        final User updatedUser = userService.updateUser(id, userDTO, (userEntity, resource) -> userResourceAssembler.updateEntity(userEntity, resource));
+        final UserDTO resource = userResourceAssembler.toModel(updatedUser);
         return ResponseEntity.status(HttpStatus.CREATED).body(resource);
     }
 
