@@ -14,10 +14,11 @@ public class PhotoOfPresent {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Lob
+    @Column(name = "photo_data", nullable = false)
     private byte[] photo;
 
-    @ManyToOne
+    // МНОГО фото -> ОДИН подарок
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "present_id", nullable = false)
-    private Presents present;
+    private Present present;
 }
