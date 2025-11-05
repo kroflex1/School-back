@@ -21,6 +21,9 @@ public class UserService {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private EnrollmentHistoryService enrollmentHistoryService;
+
     private static final EmailValidator EMAIL_VALIDATOR = EmailValidator.getInstance();
 
     @Transactional(readOnly = true)
@@ -58,6 +61,29 @@ public class UserService {
         validateUpdate(userId, existUser);
 
         return userRepository.save(existUser);
+    }
+
+    public void addCoins(Long userId, Long countCoins) {
+        Optional<User> student = userRepository.findById(userId);
+        if (student.isEmpty()) {
+            throw new IllegalArgumentException(String.format("Student not found with id: %d", userId));
+        }
+
+        Optional<User> teacher = getCurrentUser();
+
+        if (teacher.isEmpty()) {
+            throw new IllegalArgumentException(String.format("Teacher not found with id: %d", userId));
+        }
+
+        User existStudent = student.get();
+        User existTeacher = teacher.get();
+
+
+        Long currentCoins = existStudent.getCoins();
+        existStudent.setCoins(currentCoins + countCoins);
+
+        userRepository.save(existStudent);
+        enrollmentHistoryService.saveEnrollmentHistory(existTeacher, existStudent, countCoins);
     }
 
     public void deleteUser(Long userId) {
