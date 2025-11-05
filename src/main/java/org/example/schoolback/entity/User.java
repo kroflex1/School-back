@@ -2,6 +2,7 @@ package org.example.schoolback.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.apache.commons.lang3.StringUtils;
 
 import java.time.LocalDate;
 import java.util.HashSet;
@@ -12,10 +13,12 @@ import java.util.Set;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class User {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	@EqualsAndHashCode.Include
 	private Long id;
 
 	@Column(name = "login", nullable = false, unique = true)
@@ -53,7 +56,7 @@ public class User {
 	private Set<Group> groups = new HashSet<>();
 
 	public String getFullName() {
-		return firstName + " " + secondName + (patronymicName.isEmpty() ? "" : " " + patronymicName);
+		return firstName + " " + secondName + (StringUtils.isBlank(patronymicName) ? "" : " " + patronymicName);
 	}
 }
 

@@ -18,7 +18,7 @@ public class Group {
     private Long id;
 
     @Column(name = "group_name", nullable = false)
-    private String groupName;
+    private String name;
 
     @ManyToOne
     @JoinColumn(name = "teacher_id", nullable = false)
