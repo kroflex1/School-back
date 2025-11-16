@@ -38,5 +38,7 @@
         <sqlFile path="db/changelog/sql/insert_admin_user.sql"/>
     </changeSet>
 
-
+    <changeSet id="8" author="Artyom Sokolov">
+        <sqlFile path="db/changelog/sql/create_orders_table.sql"/>
+    </changeSet>
 </databaseChangeLog>
