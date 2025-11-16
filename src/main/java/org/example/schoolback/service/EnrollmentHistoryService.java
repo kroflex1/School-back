@@ -29,7 +29,7 @@ public class EnrollmentHistoryService {
         return enrollmentHistoryRepository.findByUser(user);
     }
 
-    public List<EnrollmentHistory> getEnrollmentHistoryByTeacher(User teacher) {
-        return enrollmentHistoryRepository.findByTeacher(teacher);
+    public List<EnrollmentHistory> getEnrollmentHistoryByTeacherSortedByDateDesc(User teacher) {
+        return enrollmentHistoryRepository.findByTeacherOrderByEnrollmentDateDesc(teacher);
     }
 }

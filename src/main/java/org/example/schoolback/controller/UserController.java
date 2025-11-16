@@ -15,8 +15,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/users")
@@ -104,6 +106,23 @@ public class UserController {
         }
         List<EnrollmentHistory> enrollmentHistory = enrollmentHistoryService.getEnrollmentHistoryByUser(user.get());
         List<EnrollmentHistoryDTO> historyDTOs = enrollmentHistoryAssembler.toDtoList(enrollmentHistory);
+        return ResponseEntity.ok(historyDTOs);
+    }
+
+    @GetMapping("allCoinsHistory")
+    @PreAuthorize("hasAnyRole('TEACHER')")
+    @Operation(summary = "Получить информацию о истории начисления всех коинов начисленных преподавателем")
+    public ResponseEntity<List<EnrollmentHistoryDTO>> getAllCoinsHistory() {
+        Optional<User> currentTeacher = userService.getCurrentUser();
+        if (currentTeacher.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        List<EnrollmentHistory> enrollmentHistory = enrollmentHistoryService.getEnrollmentHistoryByTeacherSortedByDateDesc(currentTeacher.get());
+        List<EnrollmentHistoryDTO> historyDTOs = enrollmentHistory.stream()
+                .map(enrollmentHistoryAssembler::toDto)
+                .collect(Collectors.toList());
+
         return ResponseEntity.ok(historyDTOs);
     }
 }
