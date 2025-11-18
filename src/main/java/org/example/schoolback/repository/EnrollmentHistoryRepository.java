@@ -12,5 +12,5 @@ public interface EnrollmentHistoryRepository extends JpaRepository<EnrollmentHis
 
     List<EnrollmentHistory> findByUser(User user);
 
-    List<EnrollmentHistory> findByTeacher(User teacher);
+    List<EnrollmentHistory> findByTeacherOrderByEnrollmentDateDesc(User teacher);
 }
