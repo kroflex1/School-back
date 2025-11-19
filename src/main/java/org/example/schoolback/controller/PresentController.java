@@ -48,7 +48,7 @@ public class PresentController {
         return ResponseEntity.status(HttpStatus.CREATED).body(convertToAdminResponse(present));
     }
 
-    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'STUDENT')")
     @GetMapping("/{id}")
     @Operation(summary = "Получить подарок", description = "Получение информации о конкретном подарке")
     public ResponseEntity<AdminPresentResponse> getPresent(
@@ -57,7 +57,7 @@ public class PresentController {
         return ResponseEntity.ok(convertToAdminResponse(present));
     }
 
-    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'STUDENT')")
     @GetMapping("/{presentId}/photos/{photoId}")
     @Operation(summary = "Получить фотографию", description = "Получение файла фотографии")
     public ResponseEntity<byte[]> getPhoto(
@@ -70,7 +70,7 @@ public class PresentController {
     }
 
     //    Чтобы получать не все подарки сразу, а частями, уменьшение нагрузки на приложение
-    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'STUDENT')")
     @GetMapping
     @Operation(summary = "Получить подарки", description = "Получение списка подарков с пагинацией")
     public ResponseEntity<List<MobilePresentResponse>> getPresents(
@@ -84,7 +84,7 @@ public class PresentController {
         return ResponseEntity.ok(responses);
     }
 
-    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'STUDENT')")
     @GetMapping("/search")
     @Operation(summary = "Поиск подарков", description = "Поиск подарков по названию")
     public ResponseEntity<List<MobilePresentResponse>> searchPresents(
