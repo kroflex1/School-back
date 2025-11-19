@@ -99,7 +99,7 @@ public class PresentController {
 
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}")
-    @Operation(summary = "Обновить подарок", description = "Обновление данных подарка")
+    @Operation(summary = "Обновить инормацию о подарке", description = "Обновление данных подарка")
     public ResponseEntity<AdminPresentResponse> updatePresent(
             @Parameter(description = "ID подарка") @PathVariable Long id,
             @RequestBody @Valid PresentUpdateRequest updateRequest) {

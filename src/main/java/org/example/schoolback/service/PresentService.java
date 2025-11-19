@@ -153,6 +153,12 @@ public class PresentService {
         return presentRepository.existsById(id);
     }
 
+    public void setStock(Long presentId, Integer stock) {
+        Present present = presentRepository.findById(presentId).orElseThrow(()->new RuntimeException("Present not found with id: " + presentId));
+        present.setStock(stock);
+        presentRepository.save(present);
+    }
+
     // PRIVATE METHODS
     private void addPhotosToPresent(Present present, List<MultipartFile> photos) {
         for (MultipartFile photoFile : photos) {

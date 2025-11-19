@@ -68,6 +68,18 @@ public class UserService {
         userRepository.delete(user.get());
     }
 
+    public void setCoinsForUser(Long userId, Long coins) {
+        if(coins < 0){
+            throw new IllegalArgumentException("Coins cannot be negative");
+        }
+        Optional<User> user = userRepository.findById(userId);
+        if (user.isEmpty()) {
+            throw new IllegalArgumentException(String.format("User not found with id: %d", userId));
+        }
+
+        userRepository.save(user.get());
+    }
+
     private void validateCreate(User user) {
         validateCommonFields(user);
 
