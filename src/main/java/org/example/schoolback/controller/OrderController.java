@@ -50,7 +50,7 @@ public class OrderController {
     @Operation(summary = "Получить информацию о заказах",
             description = """
                     Получить заказы, которые доступны пользователю.
-                    По умолчанию сортируе
+                    По умолчанию сортируется по дате создания заказа.
                     
                     **Влияние роли:**
                     - ADMIN: получает информацию о всех заказах;
@@ -59,10 +59,10 @@ public class OrderController {
     public Page<OrderDTO> getAvailableOrders(
             @Parameter(description = "Номер страницы") @RequestParam(defaultValue = "0") int page,
             @Parameter(description = "Размер страницы") @RequestParam(defaultValue = "5") int size,
-            @RequestParam(defaultValue = "id") String sortBy,
+            @RequestParam(defaultValue = "orderDate") String sortBy,
             @RequestParam(defaultValue = "asc") String sortDir
     ) {
-        Sort.Direction direction = "desc".equalsIgnoreCase(sortDir) ? Sort.Direction.DESC : Sort.Direction.ASC;
+        Sort.Direction direction = "desc".equalsIgnoreCase(sortDir) ? Sort.Direction.ASC : Sort.Direction.DESC;
         Sort sort = Sort.by(direction, sortBy);
         Pageable pageable = PageRequest.of(page, size, sort);
 
@@ -92,6 +92,15 @@ public class OrderController {
     @Operation(summary = "Обновить статус заказа")
     public ResponseEntity<OrderDTO> updateOrderStatus(@PathVariable Long id, @RequestParam OrderStatus status) {
         final Order updatedOrder = orderService.setStatusForOrder(id, status);
+        final OrderDTO resource = orderAssembler.toModel(updatedOrder);
+        return ResponseEntity.ok(resource);
+    }
+
+    @PostMapping("/{id}/cancel")
+    @PreAuthorize("hasAnyRole('ADMIN', 'STUDENT')")
+    @Operation(summary = "Отменить заказ")
+    public ResponseEntity<OrderDTO> cancelOrder(@PathVariable Long id) {
+        final Order updatedOrder = orderService.setStatusForOrder(id, OrderStatus.CANCELLED);
         final OrderDTO resource = orderAssembler.toModel(updatedOrder);
         return ResponseEntity.ok(resource);
     }
