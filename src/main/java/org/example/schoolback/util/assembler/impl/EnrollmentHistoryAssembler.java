@@ -18,7 +18,7 @@ public class EnrollmentHistoryAssembler {
         dto.setStudentName(enrollmentHistory.getUser().getFirstName() + " " +
                 enrollmentHistory.getUser().getPatronymicName());
         dto.setEnrolledCoins(enrollmentHistory.getEnrolledCoins());
-        dto.setEnrollmentDate(enrollmentHistory.getEnrollmentDate());
+        dto.setDate(enrollmentHistory.getEnrollmentDate());
         return dto;
     }
 

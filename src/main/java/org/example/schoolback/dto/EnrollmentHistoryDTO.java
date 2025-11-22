@@ -25,7 +25,6 @@ public class EnrollmentHistoryDTO {
     @JsonProperty("enrolled_coins")
     private Long enrolledCoins;
 
-    @JsonProperty("enrollment_date")
-    @JsonFormat(pattern = "dd.MM.yyyy HH:mm:ss")
-    private LocalDateTime enrollmentDate;
+    @JsonProperty(value = "date")
+    private LocalDateTime date;
 }
