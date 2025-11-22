@@ -5,9 +5,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.example.schoolback.dto.request.PresentUpdateRequest;
-import org.example.schoolback.dto.response.AdminPresentResponse;
-import org.example.schoolback.dto.response.MobilePresentResponse;
-import org.example.schoolback.dto.response.PhotoResponse;
+import org.example.schoolback.dto.response.PresentResponse;
 import org.example.schoolback.entity.PhotoOfPresent;
 import org.example.schoolback.entity.Present;
 import org.example.schoolback.service.PresentService;
@@ -33,7 +31,7 @@ public class PresentController {
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "Создать подарок", description = "Создание нового подарка с фотографиями")
-    public ResponseEntity<AdminPresentResponse> createPresent(
+    public ResponseEntity<PresentResponse> createPresent(
             @Parameter(description = "Название подарка") @RequestParam String name,
             @Parameter(description = "Цена в монетах") @RequestParam Long priceCoins,
             @Parameter(description = "Количество в наличии") @RequestParam Integer stock,
@@ -45,16 +43,16 @@ public class PresentController {
         request.setStock(stock);
 
         Present present = presentService.createPresent(request, photos);
-        return ResponseEntity.status(HttpStatus.CREATED).body(convertToAdminResponse(present));
+        return ResponseEntity.status(HttpStatus.CREATED).body(convertToUserResponse(present));
     }
 
     @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'STUDENT')")
     @GetMapping("/{id}")
     @Operation(summary = "Получить подарок", description = "Получение информации о конкретном подарке")
-    public ResponseEntity<AdminPresentResponse> getPresent(
+    public ResponseEntity<PresentResponse> getPresent(
             @Parameter(description = "ID подарка") @PathVariable Long id) {
         Present present = presentService.getPresentWithPhotos(id);
-        return ResponseEntity.ok(convertToAdminResponse(present));
+        return ResponseEntity.ok(convertToUserResponse(present));
     }
 
     @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'STUDENT')")
@@ -73,12 +71,12 @@ public class PresentController {
     @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'STUDENT')")
     @GetMapping
     @Operation(summary = "Получить подарки", description = "Получение списка подарков с пагинацией")
-    public ResponseEntity<List<MobilePresentResponse>> getPresents(
+    public ResponseEntity<List<PresentResponse>> getPresents(
             @Parameter(description = "Номер страницы") @RequestParam(defaultValue = "0") int page,
             @Parameter(description = "Размер страницы") @RequestParam(defaultValue = "20") int size) {
 
         Page<Present> presents = presentService.getAvailablePresents(PageRequest.of(page, size));
-        List<MobilePresentResponse> responses = presents.stream()
+        List<PresentResponse> responses = presents.stream()
                 .map(this::convertToUserResponse)
                 .collect(Collectors.toList());
         return ResponseEntity.ok(responses);
@@ -87,11 +85,11 @@ public class PresentController {
     @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'STUDENT')")
     @GetMapping("/search")
     @Operation(summary = "Поиск подарков", description = "Поиск подарков по названию")
-    public ResponseEntity<List<MobilePresentResponse>> searchPresents(
+    public ResponseEntity<List<PresentResponse>> searchPresents(
             @Parameter(description = "Поисковый запрос") @RequestParam String query) {
 
         List<Present> presents = presentService.searchPresents(query);
-        List<MobilePresentResponse> responses = presents.stream()
+        List<PresentResponse> responses = presents.stream()
                 .map(this::convertToUserResponse)
                 .collect(Collectors.toList());
         return ResponseEntity.ok(responses);
@@ -100,21 +98,21 @@ public class PresentController {
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}")
     @Operation(summary = "Обновить инормацию о подарке", description = "Обновление данных подарка")
-    public ResponseEntity<AdminPresentResponse> updatePresent(
+    public ResponseEntity<PresentResponse> updatePresent(
             @Parameter(description = "ID подарка") @PathVariable Long id,
             @RequestBody @Valid PresentUpdateRequest updateRequest) {
         Present present = presentService.updatePresent(id, updateRequest);
-        return ResponseEntity.ok(convertToAdminResponse(present));
+        return ResponseEntity.ok(convertToUserResponse(present));
     }
 
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping(value = "/{id}/photos", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "Добавить фотографии", description = "Добавление фотографий к существующему подарку")
-    public ResponseEntity<AdminPresentResponse> addPhotos(
+    public ResponseEntity<PresentResponse> addPhotos(
             @Parameter(description = "ID подарка") @PathVariable Long id,
             @Parameter(description = "Фотографии для добавления") @RequestParam List<MultipartFile> photos) {
         Present present = presentService.addPhotos(id, photos);
-        return ResponseEntity.ok(convertToAdminResponse(present));
+        return ResponseEntity.ok(convertToUserResponse(present));
     }
 
     @PreAuthorize("hasRole('ADMIN')")
@@ -135,32 +133,9 @@ public class PresentController {
         presentService.deletePhoto(presentId, photoId);
         return ResponseEntity.noContent().build();
     }
-
-    private AdminPresentResponse convertToAdminResponse(Present present) {
-        AdminPresentResponse response = new AdminPresentResponse();
-        response.setId(present.getId());
-        response.setName(present.getName());
-        response.setPriceCoins(present.getPriceCoins());
-        response.setStock(present.getStock());
-
-        if (present.getPhotos() != null) {
-            List<PhotoResponse> photoResponses = present.getPhotos().stream()
-                    .map(this::convertToPhotoResponse)
-                    .collect(Collectors.toList());
-            response.setPhotos(photoResponses);
-        }
-
-        return response;
-    }
-
-    private PhotoResponse convertToPhotoResponse(PhotoOfPresent photo) {
-        PhotoResponse response = new PhotoResponse();
-        response.setId(photo.getId());
-        return response;
-    }
     
-    private MobilePresentResponse convertToUserResponse(Present present) {
-        MobilePresentResponse response = new MobilePresentResponse();
+    private PresentResponse convertToUserResponse(Present present) {
+        PresentResponse response = new PresentResponse();
         response.setId(present.getId());
         response.setName(present.getName());
         response.setPriceCoins(present.getPriceCoins());

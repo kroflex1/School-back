@@ -7,10 +7,10 @@ import java.util.List;
 
 @Data
 @NoArgsConstructor
-public class AdminPresentResponse {
+public class PresentResponse {
     private Long id;
     private String name;
     private Long priceCoins;
     private Integer stock;
-    private List<PhotoResponse> photos;
+    private List<Long> photoIds;
 }

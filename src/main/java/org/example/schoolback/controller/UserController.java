@@ -15,7 +15,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -85,7 +84,7 @@ public class UserController {
     }
 
     @PutMapping("/{id}/coins")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('TEACHER')")
     @Operation(summary = "Начислить коины ученику")
     public ResponseEntity<UserDTO> addCoins(@PathVariable Long id, @RequestBody Long countCoins) {
         try {
