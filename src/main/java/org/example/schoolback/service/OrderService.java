@@ -1,5 +1,7 @@
 package org.example.schoolback.service;
 
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import org.example.schoolback.dto.request.MakeOrderRequest;
 import org.example.schoolback.entity.*;
 import org.example.schoolback.repository.OrderRepository;
@@ -8,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
@@ -22,8 +25,8 @@ public class OrderService {
     private UserService userService;
     @Autowired
     private PresentService presentService;
-    @Autowired
-    private PresentRepository presentRepository;
+    @PersistenceContext
+    private EntityManager entityManager;
 
     public Optional<Order> getById(Long orderId) {
         return orderRepository.findById(orderId);
@@ -74,9 +77,11 @@ public class OrderService {
         if (order.isEmpty()) {
             throw new IllegalArgumentException(String.format("Order with id %s not found", orderId));
         }
+        if (order.get().getStatus().getPriority() + 1 != status.getPriority()) {
+            throw new IllegalArgumentException("Incorrect order status change procedure");
+        }
 
         order.get().setStatus(status);
-        validateUpdate(orderId, order.get());
 
         return orderRepository.save(order.get());
     }
@@ -86,14 +91,11 @@ public class OrderService {
         validateCommonFields(order);
     }
 
-    private void validateUpdate(Long orderId, Order updatedOrder) {
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    protected void validateUpdate(Long orderId, Order updatedOrder) {
         validateCommonFields(updatedOrder);
 
         final Order existOrder = orderRepository.findById(orderId).get();
-
-        if (existOrder.getStatus().getPriority() + 1 != updatedOrder.getStatus().getPriority()) {
-            throw new IllegalArgumentException("Incorrect order status change procedure");
-        }
 
         if (!existOrder.getCustomer().getId().equals(updatedOrder.getCustomer().getId())) {
             throw new IllegalArgumentException("Customer of order cannot be changed");
