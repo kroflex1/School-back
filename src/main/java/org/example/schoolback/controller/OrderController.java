@@ -88,7 +88,7 @@ public class OrderController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('STUDENT')")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Обновить статус заказа")
     public ResponseEntity<OrderDTO> updateOrderStatus(@PathVariable Long id, @RequestParam OrderStatus status) {
         final Order updatedOrder = orderService.setStatusForOrder(id, status);
