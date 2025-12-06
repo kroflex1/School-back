@@ -3,16 +3,20 @@ package org.example.schoolback.service;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.validator.routines.EmailValidator;
 import org.example.schoolback.dto.UserDTO;
+import org.example.schoolback.entity.Role;
 import org.example.schoolback.entity.User;
 import org.example.schoolback.repository.UserRepository;
 import org.example.schoolback.util.Updater;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.convert.converter.Converter;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -48,6 +52,10 @@ public class UserService {
         newUser.setCoins(0L);
 
         return userRepository.save(newUser);
+    }
+
+    public Page<User> getByRole(Role role, Pageable pageable) {
+        return userRepository.findByRole(role, pageable);
     }
 
     public User updateUser(Long userId, UserDTO userDTO, Updater<User, UserDTO> updater) {
