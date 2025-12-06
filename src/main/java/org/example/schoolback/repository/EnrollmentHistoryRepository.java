@@ -12,5 +12,5 @@ public interface EnrollmentHistoryRepository extends JpaRepository<EnrollmentHis
 
     Page<EnrollmentHistory> findByUser(User user, Pageable pageable);
 
-    Page<EnrollmentHistory> findByTeacher(User teacher);
+    Page<EnrollmentHistory> findByTeacher(User teacher, Pageable pageable);
 }

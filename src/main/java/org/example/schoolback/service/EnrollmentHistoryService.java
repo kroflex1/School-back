@@ -31,6 +31,6 @@ public class EnrollmentHistoryService {
     }
 
     public Page<EnrollmentHistory> getEnrollmentHistoryByTeacherSortedByDateDesc(User teacher, Pageable pageable) {
-        return enrollmentHistoryRepository.findByTeacher(teacher);
+        return enrollmentHistoryRepository.findByTeacher(teacher, pageable);
     }
 }
