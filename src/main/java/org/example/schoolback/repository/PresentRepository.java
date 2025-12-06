@@ -16,7 +16,7 @@ public interface PresentRepository extends JpaRepository<Present, Long> {
     Page<Present> findByStockGreaterThan(Integer stock, Pageable pageable);
 
     @Query("SELECT p FROM Present p WHERE LOWER(p.name) LIKE LOWER(CONCAT('%', :query, '%')) AND p.stock > 0")
-    List<Present> findByNameContainingIgnoreCaseAndStockGreaterThan(@Param("query") String query);
+    Page<Present> findByNameContainingIgnoreCaseAndStockGreaterThan(@Param("query") String query, Pageable pageable);
 
     List<Present> findByStockGreaterThan(Integer stock);
 }

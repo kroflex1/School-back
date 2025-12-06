@@ -4,10 +4,11 @@ import org.example.schoolback.entity.EnrollmentHistory;
 import org.example.schoolback.entity.User;
 import org.example.schoolback.repository.EnrollmentHistoryRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Service
 public class EnrollmentHistoryService {
@@ -25,11 +26,11 @@ public class EnrollmentHistoryService {
         enrollmentHistoryRepository.save(history);
     }
 
-    public List<EnrollmentHistory> getEnrollmentHistoryByUser(User user) {
-        return enrollmentHistoryRepository.findByUser(user);
+    public Page<EnrollmentHistory> getEnrollmentHistoryByUser(User user, Pageable pageable) {
+        return enrollmentHistoryRepository.findByUser(user, pageable);
     }
 
-    public List<EnrollmentHistory> getEnrollmentHistoryByTeacherSortedByDateDesc(User teacher) {
-        return enrollmentHistoryRepository.findByTeacherOrderByEnrollmentDateDesc(teacher);
+    public Page<EnrollmentHistory> getEnrollmentHistoryByTeacherSortedByDateDesc(User teacher, Pageable pageable) {
+        return enrollmentHistoryRepository.findByTeacher(teacher, pageable);
     }
 }

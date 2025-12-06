@@ -1,6 +1,7 @@
 package org.example.schoolback.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import org.example.schoolback.dto.EnrollmentHistoryDTO;
 import org.example.schoolback.dto.UserDTO;
 import org.example.schoolback.entity.EnrollmentHistory;
@@ -10,14 +11,16 @@ import org.example.schoolback.service.UserService;
 import org.example.schoolback.util.assembler.impl.EnrollmentHistoryAssembler;
 import org.example.schoolback.util.assembler.impl.UserResourceAssembler;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/users")
@@ -97,31 +100,39 @@ public class UserController {
 
     @GetMapping("/{id}/coinsHistory")
     @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'STUDENT')")
-    @Operation(summary = "Получить информацию о истории начисления коинов по id")
-    public ResponseEntity<List<EnrollmentHistoryDTO>> getCoinsHistoryById(@PathVariable Long id) {
-        Optional<User> user = userService.getUserById(id);
-        if (user.isEmpty()) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
-        List<EnrollmentHistory> enrollmentHistory = enrollmentHistoryService.getEnrollmentHistoryByUser(user.get());
-        List<EnrollmentHistoryDTO> historyDTOs = enrollmentHistoryAssembler.toDtoList(enrollmentHistory);
-        return ResponseEntity.ok(historyDTOs);
+    @Operation(summary = "Получить информацию о истории начисления коинов для пользователя по его id")
+    public Page<EnrollmentHistoryDTO> getCoinsHistoryById(
+            @PathVariable Long id,
+            @Parameter(description = "Номер страницы") @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "Размер страницы") @RequestParam(defaultValue = "5") int size,
+            @RequestParam(defaultValue = "enrollmentDate") String sortBy,
+            @RequestParam(defaultValue = "desc") String sortDir) {
+        Sort.Direction direction = "asc".equalsIgnoreCase(sortDir) ? Sort.Direction.ASC : Sort.Direction.DESC;
+        Sort sort = Sort.by(direction, sortBy);
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+        User user = userService.getUserById(id).orElseThrow(() -> new IllegalArgumentException("User with id " + id + " not found"));
+
+        Page<EnrollmentHistory> enrollmentHistory = enrollmentHistoryService.getEnrollmentHistoryByUser(user, pageable);
+        return enrollmentHistory.map(entity->enrollmentHistoryAssembler.toDto(entity));
     }
 
     @GetMapping("allCoinsHistory")
     @PreAuthorize("hasAnyRole('TEACHER')")
     @Operation(summary = "Получить информацию о истории начисления всех коинов начисленных преподавателем")
-    public ResponseEntity<List<EnrollmentHistoryDTO>> getAllCoinsHistory() {
-        Optional<User> currentTeacher = userService.getCurrentUser();
-        if (currentTeacher.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
+    public Page<EnrollmentHistoryDTO> getAllCoinsHistory(
+            @Parameter(description = "Номер страницы") @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "Размер страницы") @RequestParam(defaultValue = "5") int size,
+            @RequestParam(defaultValue = "enrollmentDate") String sortBy,
+            @RequestParam(defaultValue = "desc") String sortDir
+    ) {
+        Sort.Direction direction = "asc".equalsIgnoreCase(sortDir) ? Sort.Direction.ASC : Sort.Direction.DESC;
+        Sort sort = Sort.by(direction, sortBy);
+        Pageable pageable = PageRequest.of(page, size, sort);
 
-        List<EnrollmentHistory> enrollmentHistory = enrollmentHistoryService.getEnrollmentHistoryByTeacherSortedByDateDesc(currentTeacher.get());
-        List<EnrollmentHistoryDTO> historyDTOs = enrollmentHistory.stream()
-                .map(enrollmentHistoryAssembler::toDto)
-                .collect(Collectors.toList());
+        User currentTeacher = userService.getCurrentUser().get();
 
-        return ResponseEntity.ok(historyDTOs);
+        Page<EnrollmentHistory> enrollmentHistory = enrollmentHistoryService.getEnrollmentHistoryByTeacherSortedByDateDesc(currentTeacher, pageable);
+        return enrollmentHistory.map(entity->enrollmentHistoryAssembler.toDto(entity));
     }
 }

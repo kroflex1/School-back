@@ -62,7 +62,7 @@ public class OrderController {
             @RequestParam(defaultValue = "orderDate") String sortBy,
             @RequestParam(defaultValue = "asc") String sortDir
     ) {
-        Sort.Direction direction = "desc".equalsIgnoreCase(sortDir) ? Sort.Direction.ASC : Sort.Direction.DESC;
+        Sort.Direction direction = "asc".equalsIgnoreCase(sortDir) ? Sort.Direction.ASC : Sort.Direction.DESC;
         Sort sort = Sort.by(direction, sortBy);
         Pageable pageable = PageRequest.of(page, size, sort);
 

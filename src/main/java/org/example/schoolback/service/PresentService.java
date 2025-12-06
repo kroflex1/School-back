@@ -3,9 +3,12 @@ package org.example.schoolback.service;
 import org.example.schoolback.dto.request.PresentUpdateRequest;
 import org.example.schoolback.entity.Present;
 import org.example.schoolback.entity.PhotoOfPresent;
+import org.example.schoolback.entity.Role;
+import org.example.schoolback.entity.User;
 import org.example.schoolback.repository.PresentRepository;
 import org.example.schoolback.repository.PhotoOfPresentRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -19,6 +22,9 @@ import java.util.List;
 @RequiredArgsConstructor
 @Transactional
 public class PresentService {
+
+    @Autowired
+    private UserService userService;
 
     private final PresentRepository presentRepository;
     private final PhotoOfPresentRepository photoOfPresentRepository;
@@ -58,20 +64,27 @@ public class PresentService {
                 .orElseThrow(() -> new RuntimeException("Present not found with id: " + id));
     }
 
-    // READ - For Mobile
+    /**
+     * Возвращает список подарков, доступных для текущего пользователя в зависимости от его роли.
+     *
+     * <p><b>Логика работы в зависимости от роли:</b>
+     * <ul>
+     *   <li><b>ADMIN</b> - получает полный список всех подарков</li>
+     *   <li><b>STUDENT, TEACHER</b> - получает список подарков, которые есть в наличии</li>
+     * </ul>
+     */
     @Transactional(readOnly = true)
-    public Page<Present> getAvailablePresents(Pageable pageable) {
+    public Page<Present> getAvailablePresentsForCurrentUser(Pageable pageable) {
+        final User user = userService.getCurrentUser().get();
+        if (user.getRole().equals(Role.ADMIN)) {
+            return presentRepository.findAll(pageable);
+        }
         return presentRepository.findByStockGreaterThan(0, pageable);
     }
 
     @Transactional(readOnly = true)
-    public List<Present> searchPresents(String query) {
-        return presentRepository.findByNameContainingIgnoreCaseAndStockGreaterThan(query);
-    }
-
-    @Transactional(readOnly = true)
-    public List<Present> getAvailablePresents() {
-        return presentRepository.findByStockGreaterThan(0);
+    public Page<Present> searchPresents(String presentName, Pageable pageable) {
+        return presentRepository.findByNameContainingIgnoreCaseAndStockGreaterThan(presentName, pageable);
     }
 
     // UPDATE

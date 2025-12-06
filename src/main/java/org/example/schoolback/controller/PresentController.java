@@ -11,6 +11,8 @@ import org.example.schoolback.entity.Present;
 import org.example.schoolback.service.PresentService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -43,7 +45,7 @@ public class PresentController {
         request.setStock(stock);
 
         Present present = presentService.createPresent(request, photos);
-        return ResponseEntity.status(HttpStatus.CREATED).body(convertToUserResponse(present));
+        return ResponseEntity.status(HttpStatus.CREATED).body(convertToPresentResponse(present));
     }
 
     @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'STUDENT')")
@@ -52,7 +54,7 @@ public class PresentController {
     public ResponseEntity<PresentResponse> getPresent(
             @Parameter(description = "ID подарка") @PathVariable Long id) {
         Present present = presentService.getPresentWithPhotos(id);
-        return ResponseEntity.ok(convertToUserResponse(present));
+        return ResponseEntity.ok(convertToPresentResponse(present));
     }
 
     @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'STUDENT')")
@@ -67,32 +69,45 @@ public class PresentController {
                 .body(photoData);
     }
 
-    //    Чтобы получать не все подарки сразу, а частями, уменьшение нагрузки на приложение
-    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'STUDENT')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'STUDENT')")
     @GetMapping
-    @Operation(summary = "Получить подарки", description = "Получение списка подарков с пагинацией")
-    public ResponseEntity<List<PresentResponse>> getPresents(
+    @Operation(summary = "Получить список доступных подарков",
+            description = """
+                    Получить список подарков, доступные пользователю.
+                    
+                    **Влияние роли:**
+                    - ADMIN: получает информацию о всех подарках, даже которых нет в наличии;
+                    - STUDENT: получает информацию о подарках, которые есть в наличии;
+                    """)
+    public Page<PresentResponse> getPresents(
             @Parameter(description = "Номер страницы") @RequestParam(defaultValue = "0") int page,
-            @Parameter(description = "Размер страницы") @RequestParam(defaultValue = "20") int size) {
+            @Parameter(description = "Размер страницы") @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "id") String sortBy,
+            @RequestParam(defaultValue = "asc") String sortDir) {
+        Sort.Direction direction = "asc".equalsIgnoreCase(sortDir) ? Sort.Direction.ASC : Sort.Direction.DESC;
+        Sort sort = Sort.by(direction, sortBy);
+        Pageable pageable = PageRequest.of(page, size, sort);
 
-        Page<Present> presents = presentService.getAvailablePresents(PageRequest.of(page, size));
-        List<PresentResponse> responses = presents.stream()
-                .map(this::convertToUserResponse)
-                .collect(Collectors.toList());
-        return ResponseEntity.ok(responses);
+        Page<Present> presents = presentService.getAvailablePresentsForCurrentUser(pageable);
+        return presents.map(this::convertToPresentResponse);
     }
 
-    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'STUDENT')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'STUDENT')")
     @GetMapping("/search")
-    @Operation(summary = "Поиск подарков", description = "Поиск подарков по названию")
-    public ResponseEntity<List<PresentResponse>> searchPresents(
-            @Parameter(description = "Поисковый запрос") @RequestParam String query) {
+    @Operation(summary = "Поиск подарков по названию",
+            description = "Получить список подарков по названию (частичное совпадение, без учета регистра) только из тех, что есть в наличии (остаток > 0)")
+    public Page<PresentResponse> searchPresents(
+            @Parameter(description = "Название подарка") @RequestParam String query,
+            @Parameter(description = "Номер страницы") @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "Размер страницы") @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "id") String sortBy,
+            @RequestParam(defaultValue = "asc") String sortDir) {
+        Sort.Direction direction = "asc".equalsIgnoreCase(sortDir) ? Sort.Direction.ASC : Sort.Direction.DESC;
+        Sort sort = Sort.by(direction, sortBy);
+        Pageable pageable = PageRequest.of(page, size, sort);
 
-        List<Present> presents = presentService.searchPresents(query);
-        List<PresentResponse> responses = presents.stream()
-                .map(this::convertToUserResponse)
-                .collect(Collectors.toList());
-        return ResponseEntity.ok(responses);
+        Page<Present> presents = presentService.searchPresents(query, pageable);
+        return presents.map(this::convertToPresentResponse);
     }
 
     @PreAuthorize("hasRole('ADMIN')")
@@ -102,7 +117,7 @@ public class PresentController {
             @Parameter(description = "ID подарка") @PathVariable Long id,
             @RequestBody @Valid PresentUpdateRequest updateRequest) {
         Present present = presentService.updatePresent(id, updateRequest);
-        return ResponseEntity.ok(convertToUserResponse(present));
+        return ResponseEntity.ok(convertToPresentResponse(present));
     }
 
     @PreAuthorize("hasRole('ADMIN')")
@@ -112,7 +127,7 @@ public class PresentController {
             @Parameter(description = "ID подарка") @PathVariable Long id,
             @Parameter(description = "Фотографии для добавления") @RequestParam List<MultipartFile> photos) {
         Present present = presentService.addPhotos(id, photos);
-        return ResponseEntity.ok(convertToUserResponse(present));
+        return ResponseEntity.ok(convertToPresentResponse(present));
     }
 
     @PreAuthorize("hasRole('ADMIN')")
@@ -134,7 +149,7 @@ public class PresentController {
         return ResponseEntity.noContent().build();
     }
     
-    private PresentResponse convertToUserResponse(Present present) {
+    private PresentResponse convertToPresentResponse(Present present) {
         PresentResponse response = new PresentResponse();
         response.setId(present.getId());
         response.setName(present.getName());
