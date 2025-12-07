@@ -4,8 +4,9 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import org.example.schoolback.dto.EnrollmentHistoryDTO;
 import org.example.schoolback.dto.UserDTO;
-import org.example.schoolback.entity.EnrollmentHistory;
-import org.example.schoolback.entity.User;
+import org.example.schoolback.dto.response.StudentResponse;
+import org.example.schoolback.dto.response.TeacherResponse;
+import org.example.schoolback.entity.*;
 import org.example.schoolback.service.EnrollmentHistoryService;
 import org.example.schoolback.service.UserService;
 import org.example.schoolback.util.assembler.impl.EnrollmentHistoryAssembler;
@@ -134,5 +135,54 @@ public class UserController {
 
         Page<EnrollmentHistory> enrollmentHistory = enrollmentHistoryService.getEnrollmentHistoryByTeacherSortedByDateDesc(currentTeacher, pageable);
         return enrollmentHistory.map(entity->enrollmentHistoryAssembler.toDto(entity));
+    }
+
+    @GetMapping("/students")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Получить список студентов")
+    public Page<StudentResponse> getStudents(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "secondName") String sortBy,
+            @RequestParam(defaultValue = "asc") String sortDir
+    ) {
+        Sort.Direction direction = "asc".equalsIgnoreCase(sortDir) ? Sort.Direction.ASC : Sort.Direction.DESC;
+        Sort sort = Sort.by(direction, sortBy);
+        Pageable pageable = PageRequest.of(page, size, sort);
+        Page<User> allStudents = userService.getByRole(Role.STUDENT, pageable);
+        return allStudents.map(this::convertToStudentResponse);
+    }
+
+    @GetMapping("/teachers")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Получить список учителей")
+    public Page<TeacherResponse> getTeachers(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "secondName") String sortBy,
+            @RequestParam(defaultValue = "asc") String sortDir
+    ) {
+        Sort.Direction direction = "asc".equalsIgnoreCase(sortDir) ? Sort.Direction.ASC : Sort.Direction.DESC;
+        Sort sort = Sort.by(direction, sortBy);
+        Pageable pageable = PageRequest.of(page, size, sort);
+        Page<User> allStudents = userService.getByRole(Role.TEACHER, pageable);
+        return allStudents.map(this::convertToTeacherResponse);
+    }
+
+    private StudentResponse convertToStudentResponse(User student) {
+        StudentResponse response = new StudentResponse();
+        response.setId(student.getId());
+        response.setFullName(student.getFullName());
+        response.setLogin(student.getLogin());
+        response.setCoins(String.valueOf(student.getCoins()));
+        return response;
+    }
+
+    private TeacherResponse convertToTeacherResponse(User teacher) {
+        TeacherResponse response = new TeacherResponse();
+        response.setId(teacher.getId());
+        response.setFullName(teacher.getFullName());
+        response.setLogin(teacher.getLogin());
+        return response;
     }
 }

@@ -148,7 +148,7 @@ public class PresentController {
         presentService.deletePhoto(presentId, photoId);
         return ResponseEntity.noContent().build();
     }
-    
+
     private PresentResponse convertToPresentResponse(Present present) {
         PresentResponse response = new PresentResponse();
         response.setId(present.getId());
