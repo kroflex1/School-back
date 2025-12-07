@@ -8,6 +8,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface GroupRepository extends JpaRepository<Group, Long> {
@@ -21,4 +22,6 @@ public interface GroupRepository extends JpaRepository<Group, Long> {
             "WHERE pg.user_id = :userId",
             nativeQuery = true)
     List<Group> findAllGroupsByStudentId(@Param("userId") Long studentId);
+
+    Optional<Group> findByNameIgnoreCase(String name);
 }

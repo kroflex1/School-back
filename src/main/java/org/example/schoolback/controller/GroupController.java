@@ -47,8 +47,8 @@ public class GroupController {
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Обновить группу")
-    public ResponseEntity<GroupDTO> updateGroup(@PathVariable Long id, @RequestBody GroupDTO groupDTO) {
-        final Group updatedGroup = groupService.updateGroup(id, groupDTO, (groupEntity, resource) -> groupAssembler.updateEntity(groupEntity, resource));
+    public ResponseEntity<GroupDTO> updateGroup(@PathVariable Long id, @RequestBody CreateGroupRequest createGroupRequest) {
+        final Group updatedGroup = groupService.updateGroup(id, createGroupRequest, (groupEntity, resource) -> groupAssembler.updateEntity(groupEntity, resource));
         final GroupDTO resource = groupAssembler.toModel(updatedGroup);
         return ResponseEntity.ok(resource);
     }

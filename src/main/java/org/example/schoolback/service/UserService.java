@@ -51,16 +51,16 @@ public class UserService {
     }
 
     public User updateUser(Long userId, UserDTO userDTO, Updater<User, UserDTO> updater) {
-        Optional<User> user = userRepository.findById(userId);
-        if (user.isEmpty()) {
+        if (userRepository.findById(userId).isEmpty()) {
             throw new IllegalArgumentException(String.format("User not found with id: %d", userId));
         }
 
-        final User existUser = user.get();
-        updater.update(existUser, userDTO);
-        validateUpdate(userId, existUser);
+        final User updatedUser = new User();
+        updater.update(updatedUser, userDTO);
+        validateUpdate(userId, updatedUser);
 
-        return userRepository.save(existUser);
+        updatedUser.setId(userId);
+        return userRepository.save(updatedUser);
     }
 
     public void addCoins(Long userId, Long countCoins) {
@@ -112,6 +112,9 @@ public class UserService {
         if (userRepository.findByLogin(user.getLogin()).isPresent()) {
             throw new IllegalArgumentException(String.format("User with login %s already exists", user.getLogin()));
         }
+        if (userRepository.findByEmail(user.getEmail()).isPresent()) {
+            throw new IllegalArgumentException(String.format("User with email %s already exists", user.getEmail()));
+        }
     }
 
     private void validateUpdate(Long userId, User updatedUser) {
@@ -121,6 +124,10 @@ public class UserService {
         //если в рамках обновления был изменён логин, то мы проверяем, есть ли в бд уже пользователь с таким логином
         if (!existUser.getLogin().equals(updatedUser.getLogin()) && userRepository.findByLogin(updatedUser.getLogin()).isPresent()) {
             throw new IllegalArgumentException(String.format("User with login %s already exists", updatedUser.getLogin()));
+        }
+        //если в рамках обновления была изменена почта, то мы проверяем, есть ли в бд уже пользователь с такой почтой
+        if (!existUser.getEmail().equals(updatedUser.getEmail()) && userRepository.findByEmail(updatedUser.getEmail()).isPresent()) {
+            throw new IllegalArgumentException(String.format("User with email %s already exists", updatedUser.getEmail()));
         }
     }
 
