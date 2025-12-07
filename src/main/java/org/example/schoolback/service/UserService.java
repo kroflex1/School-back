@@ -110,7 +110,7 @@ public class UserService {
         if (user.isEmpty()) {
             throw new IllegalArgumentException(String.format("User not found with id: %d", userId));
         }
-
+        user.get().setCoins(coins);
         userRepository.save(user.get());
     }
 
