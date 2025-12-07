@@ -1,18 +1,22 @@
 package org.example.schoolback.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import org.example.schoolback.dto.GroupDTO;
 import org.example.schoolback.dto.request.CreateGroupRequest;
 import org.example.schoolback.entity.Group;
 import org.example.schoolback.service.GroupService;
 import org.example.schoolback.util.assembler.impl.GroupAssembler;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 import java.util.Optional;
 
 @RestController
@@ -65,17 +69,25 @@ public class GroupController {
     @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'STUDENT')")
     @Operation(summary = "Получить группы, в которых состоит пользователь",
             description = """
-        Получить группы, в которых состоит пользователь.
-        
-        **Влияние роли:**
-        - ADMIN: получает информацию о всех группах;
-        - TEACHER: получает информацию о группах, в которых он является преподавателем;
-        - STUDENT: получает информацию о группах, в которых он состоит;
-        """)
-    public ResponseEntity<List<GroupDTO>> getAvailableGroups() {
-        final List<Group> availableGroups = groupService.getAvailableGroupsForCurrentUser();
-        final List<GroupDTO> resources = groupAssembler.toModels(availableGroups);
-        return ResponseEntity.ok(resources);
+                    Получить группы, в которых состоит пользователь.
+                    
+                    **Влияние роли:**
+                    - ADMIN: получает информацию о всех группах;
+                    - TEACHER: получает информацию о группах, в которых он является преподавателем;
+                    - STUDENT: получает информацию о группах, в которых он состоит;
+                    """)
+    public Page<GroupDTO> getAvailableGroups(
+            @Parameter(description = "Номер страницы") @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "Размер страницы") @RequestParam(defaultValue = "5") int size,
+            @RequestParam(defaultValue = "id") String sortBy,
+            @RequestParam(defaultValue = "asc") String sortDir
+    ) {
+        Sort.Direction direction = "asc".equalsIgnoreCase(sortDir) ? Sort.Direction.ASC : Sort.Direction.DESC;
+        Sort sort = Sort.by(direction, sortBy);
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+        final Page<Group> availableGroups = groupService.getAvailableGroupsForCurrentUser(pageable);
+        return availableGroups.map(x -> groupAssembler.toModel(x));
     }
 
     @PostMapping("{groupId}/students/{studentId}")

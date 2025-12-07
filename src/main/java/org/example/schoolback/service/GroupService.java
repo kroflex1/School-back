@@ -10,10 +10,11 @@ import org.example.schoolback.repository.GroupRepository;
 import org.example.schoolback.util.Updater;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.convert.converter.Converter;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -50,14 +51,14 @@ public class GroupService {
      *   <li><b>STUDENT</b> - получает группы, в которых пользователь состоит как студент</li>
      * </ul>
      */
-    public List<Group> getAvailableGroupsForCurrentUser() {
+    public Page<Group> getAvailableGroupsForCurrentUser(Pageable pageable) {
         final User user = userService.getCurrentUser().get();
         if (user.getRole().equals(Role.ADMIN)) {
-            return groupRepository.findAll();
+            return groupRepository.findAll(pageable);
         } else if (user.getRole().equals(Role.TEACHER)) {
-            return groupRepository.findByTeacherId(user.getId());
+            return groupRepository.findByTeacherId(user.getId(), pageable);
         } else {
-            return groupRepository.findAllGroupsByStudentId(user.getId());
+            return groupRepository.findAllGroupsByStudentId(user.getId(), pageable);
         }
     }
 
