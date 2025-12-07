@@ -25,8 +25,6 @@ public class OrderService {
     private UserService userService;
     @Autowired
     private PresentService presentService;
-    @PersistenceContext
-    private EntityManager entityManager;
 
     public Optional<Order> getById(Long orderId) {
         return orderRepository.findById(orderId);
@@ -91,7 +89,7 @@ public class OrderService {
         validateCommonFields(order);
     }
 
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
+
     protected void validateUpdate(Long orderId, Order updatedOrder) {
         validateCommonFields(updatedOrder);
 

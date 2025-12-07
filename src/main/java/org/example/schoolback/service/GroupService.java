@@ -62,17 +62,20 @@ public class GroupService {
         }
     }
 
-    public Group updateGroup(Long groupId, GroupDTO groupDTO, Updater<Group, GroupDTO> updater) {
-        Optional<Group> group = groupRepository.findById(groupId);
-        if (group.isEmpty()) {
+    public Group updateGroup(Long groupId, CreateGroupRequest createGroupRequest, Updater<Group, GroupDTO> updater) {
+        if (groupRepository.findById(groupId).isEmpty()) {
             throw new IllegalArgumentException(String.format("Group with id: %d not found ", groupId));
         }
+        final GroupDTO groupDTO = new GroupDTO();
+        groupDTO.setGroupName(createGroupRequest.getGroupName());
+        groupDTO.setTeacherId(createGroupRequest.getTeacherId());
 
-        final Group existGroup = group.get();
-        updater.update(existGroup, groupDTO);
-        validateUpdate(groupId, existGroup);
+        final Group updatedGroup = new Group();
+        updater.update(updatedGroup, groupDTO);
+        validateUpdate(groupId, updatedGroup);
 
-        return groupRepository.save(existGroup);
+        updatedGroup.setId(groupId);
+        return groupRepository.save(updatedGroup);
     }
 
     public void deleteGroup(Long groupId) {
@@ -124,19 +127,16 @@ public class GroupService {
     private void validateCreate(Group group) {
         validateCommonFields(group);
 
-        if (!groupRepository.findByTeacherAndNameContainingIgnoreCase(group.getTeacher(), group.getName()).isEmpty()) {
-            throw new IllegalArgumentException(String.format("Group with given teacher: %s and name: %s already exists",group.getTeacher().getFullName(), group.getName()));
+        if (groupRepository.findByNameIgnoreCase(group.getName()).isPresent()) {
+            throw new IllegalArgumentException(String.format("Group with given name: %s already exists", group.getName()));
         }
     }
 
     private void validateUpdate(Long groupId, Group updatedGroup) {
         final Group existGroup = groupRepository.findById(groupId).get();
 
-        //проверяем, изменился ли учитель у группы или название группы, и если что-то изменилось, то смотрим нет ли уже такой группы
-        if (!existGroup.getName().equals(updatedGroup.getName()) || !existGroup.getTeacher().equals(updatedGroup.getTeacher())) {
-            if (!groupRepository.findByTeacherAndNameContainingIgnoreCase(updatedGroup.getTeacher(), updatedGroup.getName()).isEmpty()) {
-                throw new IllegalArgumentException(String.format("Group with given teacher: %s and name: %s already exists", updatedGroup.getTeacher().getFullName(), updatedGroup.getName()));
-            }
+        if (!existGroup.getName().equals(updatedGroup.getName()) && groupRepository.findByNameIgnoreCase(updatedGroup.getName()).isPresent()) {
+            throw new IllegalArgumentException(String.format("Group with given name: %s already exists", updatedGroup.getName()));
         }
     }
 
@@ -147,7 +147,15 @@ public class GroupService {
         }
 
         if (group.getTeacher() == null) {
-            throw new IllegalArgumentException("Group cannot be withou teacher");
+            throw new IllegalArgumentException("Group cannot be without teacher");
+        }
+
+        Optional<User> teacher = userService.getUserById(group.getTeacher().getId());
+        if (teacher.isEmpty()) {
+            throw new IllegalArgumentException("Teacher with id " + group.getTeacher().getId() + " does not exist");
+        }
+        if (!teacher.get().getRole().equals(Role.TEACHER)) {
+            throw new IllegalArgumentException("User with id " + group.getTeacher().getId() + " is not teacher");
         }
     }
 }
