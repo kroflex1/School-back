@@ -43,6 +43,6 @@ public class UserDTO {
     @JsonProperty("date_of_birth")
     private LocalDate birthDate;
 
-    @JsonProperty(value = "coins", access = JsonProperty.Access.READ_ONLY)
+    @JsonProperty(value = "coins")
     private Long coins;
 }
