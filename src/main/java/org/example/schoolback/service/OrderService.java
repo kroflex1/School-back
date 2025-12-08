@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.Objects;
 import java.util.Optional;
 
 @Service
@@ -78,7 +79,12 @@ public class OrderService {
         if (order.get().getStatus().getPriority() + 1 != status.getPriority()) {
             throw new IllegalArgumentException("Incorrect order status change procedure");
         }
-
+        final User customer = order.get().getCustomer();
+        if (Objects.equals(status.toString(), "CANCELLED")){
+            final Present present = order.get().getPresent();
+            userService.setCoinsForUser(customer.getId(), customer.getCoins() + present.getPriceCoins());
+            presentService.setStock(present.getId(), present.getStock() + 1);
+        }
         order.get().setStatus(status);
 
         return orderRepository.save(order.get());
